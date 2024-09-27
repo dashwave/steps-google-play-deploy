@@ -2,3 +2,4 @@
 _tmp/
 .idea
 steps-google-play-deploy
+/vendor
