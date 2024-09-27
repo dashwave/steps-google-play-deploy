@@ -20,7 +20,7 @@ const internalServerError = "googleapi: Error 500"
 
 func failf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
-	os.Exit(1)
+	//os.Exit(1)
 }
 
 // uploadApplications uploads every application file (apk or aab) to the Google Play. Returns the version codes of
