@@ -148,7 +148,7 @@ func versionCodeMapToSlice(codeMap map[int64]int) []int64 {
 	return versionCodes
 }
 
-func UploadToGooglePlay(ctx context.Context, configs Configs) error {
+func UploadToGooglePlay(ctx context.Context, configs Configs, buildLogFile *os.File) error {
 	//
 	// Getting configs
 
@@ -159,6 +159,7 @@ func UploadToGooglePlay(ctx context.Context, configs Configs) error {
 	}
 	//log.SetEnableDebugLog(configs.IsDebugLog)
 	log.Donef("Configuration read successfully")
+	buildLogFile.WriteString("[*] Configuration read successfully\n")
 
 	//
 	// Create client and service
@@ -167,14 +168,17 @@ func UploadToGooglePlay(ctx context.Context, configs Configs) error {
 	client, err := createHTTPClient(string(configs.JSONKeyPath))
 	if err != nil {
 		failf("Failed to create HTTP client: %v", err)
+		buildLogFile.WriteString(fmt.Sprintf("[#] Failed to create HTTP client: %v\n", err))
 		return err
 	}
 	service, err := androidpublisher.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		failf("Failed to create publisher service, error: %s", err)
+		buildLogFile.WriteString(fmt.Sprintf("[#] Failed to create publisher service, error: %s\n", err))
 		return err
 	}
 	log.Donef("Authenticated client created")
+	buildLogFile.WriteString("[*] Authenticated client created\n")
 
 	// if RetryWithoutSendingToReview is true, we will try to commit the edit with changesNotSentForReview set to true
 	// if the edit is not sent for review, we will return an error
@@ -182,8 +186,10 @@ func UploadToGooglePlay(ctx context.Context, configs Configs) error {
 	RetryWithoutSendingToReview := false
 	errorString := executeEdit(service, configs, RetryWithoutSendingToReview)
 	if errorString == "" {
+		buildLogFile.WriteString("[*] Edit committed\n")
 		return nil
 	}
+	buildLogFile.WriteString(fmt.Sprintf("[#] There is an issue creating edit %s\n", errorString))
 	// if strings.Contains(errorString, changesNotSentForReviewMessage) {
 	// 	if configs.RetryWithoutSendingToReview {
 	// 		log.Warnf(errorString)
